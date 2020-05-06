@@ -1,15 +1,18 @@
 import curses
-import time
 import random as _r
-import pickle
-import io
+import func_save as fs
 import os
 
 h = 30
 w = 119
 
-screen_list = []
-screen_list_hm = []
+slraw = []
+slhm = []
+slobj = []
+
+# slraw = screen list raw - has all raw data of terrain textures/characters
+# slhm = screen list height map- has only heights as list
+# slobj = screen list object - holds all values and positions for special objects
 
 # Key-key
 kk = [(-1, 0), (-1, 1), (0, 1), (1, 1), (1, 0), (1, -1), (0, -1), (-1, -1)]
@@ -22,6 +25,7 @@ class Player:
 	tool_mode = 0
 	tool_mat = chr(32)
 	can_fall = True
+	current_save = "none"
 
 
 	def __init__(self, x, y):
@@ -51,7 +55,7 @@ class Player:
 					self.y = self.y - 1
 					self.draw(stdscr)
 			else:
-				self.move_screen(stdscr, 1, 0, screen_list_hm[self.current_screen][0], 0)
+				self.move_screen(stdscr, 1, 0, slhm[self.current_screen][0], 0)
 		elif dir == 2:
 			print("Go down")
 		elif dir == 3:
@@ -68,7 +72,7 @@ class Player:
 					self.y = self.y - 1
 					self.draw(stdscr)
 			elif self.current_screen > 0:
-				self.move_screen(stdscr, -1, w - 1, screen_list_hm[self.current_screen][len(screen_list_hm[self.current_screen]) - 1], w - 1)
+				self.move_screen(stdscr, -1, w - 1, slhm[self.current_screen][len(slhm[self.current_screen]) - 1], w - 1)
 		
 
 	def tool_use(self, stdscr, dir):
@@ -99,7 +103,7 @@ class Player:
 				return
 
 		stdscr.addstr(self.y + dir[0], self.x + dir[1], self.tool_mat)
-		screen_list[self.current_screen][self.y + dir[0]][self.x + dir[1]] = self.tool_mat
+		slraw[self.current_screen][self.y + dir[0]][self.x + dir[1]] = self.tool_mat
 
 	def manual_tool_use(self, stdscr, tool, _dir):
 		previous_tool = self.tool_mode
@@ -124,17 +128,18 @@ class Player:
 
 
 	def spawn(self, stdscr, screen, x, y, player_start):
-		if len(screen_list) < screen + 1:
-			screen_list.append(generate_map(self.y+1, 4))
-		if self.y <= screen_list_hm[screen][player_start]:
-			self.y = screen_list_hm[screen][player_start] - 1
+		if len(slraw) < screen + 1:
+			slraw.append(generate_map(self.y+1, 4))
+		if self.y <= slhm[screen][player_start]:
+			self.y = slhm[screen][player_start] - 1
 		self.x = x
-		generate_terrain(stdscr, screen_list[screen])
+		generate_terrain(stdscr, slraw[screen])
 
 		# Debug info init
-		stdscr.addstr(0, 112, str(self.current_screen + 1) + "/" + str(len(screen_list)))
+		stdscr.addstr(0, 112, str(self.current_screen + 1) + "/" + str(len(slraw)))
 		stdscr.addstr(0, 0, str(self.tool_mode))
 		self.draw(stdscr)
+
 
 	def change_mode(self, stdscr, mode):
 		stdscr.addstr(0, 0, str(self.tool_mode))
@@ -154,10 +159,15 @@ class Player:
 
 # Creates a list, where all values of the height map are placed
 def generate_map(start, flatness):
-	# Initialize map layout
+	# Initialize map/obj layout
 	map_gen = []
+	obj_gen = []
 	for i in range(h):
 		map_gen.append([chr(32)] * w)
+	# Creating obj screen list
+	for i in range(h):
+		obj_gen.append([None] * w)
+	slobj.append(obj_gen)
 
 	# Start location
 	current_loc = start
@@ -191,7 +201,7 @@ def generate_map(start, flatness):
 				surface_mat = "▒"
 			map_gen[j + foo[i] + 1][i] = surface_mat
 
-	screen_list_hm.append(foo)
+	slhm.append(foo)
 	return map_gen
 
 
@@ -203,67 +213,92 @@ def generate_terrain(stdscr, map_arr):
 
 
 
+def start_game(stdscr):
+	stdscr.clear()
+	game_started = True
+	player.spawn(stdscr, 0, 0, int(h / 2), 0)
+	player.change_mode(stdscr, 0)
 
-def saveToFile(stdscr, name):
-	# Overwriting file
-	if os.path.exists("Saves/" + name):
-		os.remove("Saves/" + name + "/save_raw.txt")
-		os.remove("Saves/" + name + "/save_hm.txt")
-	else:
-		os.mkdir("Saves/" + name)
-
-	with io.open("Saves/" + name + "/save_raw.txt", "w", encoding="utf-8") as fp:
-		fp.write(str(screen_list))
-	fp.close()
-	with io.open("Saves/" + name + "/save_hm.txt", "w", encoding="utf-8") as fp:
-		fp.write(str(screen_list_hm))
+menu_options = ["Start new game"]
+def initialize_menu():
+	file_list = os.listdir("Saves/")
+	for f in file_list:
+		menu_options.append(f)
 
 
-	stdscr.addstr(0, 50, "Saving to: /Saves/" + name + "/")
-	fp.close()
-
-def loadFromFile(name):
-	loaded_screen_list = []
-	loaded_screen_list_hm = []
-
-	# If you can't load the file, return nothing
-	if not os.path.exists("Saves/" + name):
-		return (loaded_screen_list, loaded_screen_list_hm)
-
-	with io.open("Saves/" + name + "/save_raw.txt", "r", encoding="utf-8") as fp:
-		loaded_screen_list = eval(fp.readline())
-	fp.close()
-	with io.open("Saves/" + name + "/save_hm.txt", encoding="utf-8") as fp:
-		loaded_screen_list_hm = eval(fp.readline())
-	fp.close()
-
-	return (loaded_screen_list, loaded_screen_list_hm)
 
 
 
 
 # Loading a file
 # Comment this out to not load a file
-screen_list, screen_list_hm = loadFromFile("save_1")
+# Setup
+player = Player(0, 0)
 
 def main(stdscr):
-	# Setup
-	player = Player(0, 0)
 
-
+	game_started = False
 	# h, w = stdscr.getmaxyx()
 
 	curses.curs_set(0)
 	crash = False
-	curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
+	curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLACK)
+	curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)
 
 
-	# Start
-	player.spawn(stdscr, 0, 0, int(h / 2), 0)
-	player.change_mode(stdscr, 0)
+
+
+	# MENU CODE
+
+	selected = 0
+	initialize_menu()
+
+	while not crash and not game_started:
+
+
+		for i in range(len(menu_options)):
+			current_option = menu_options[i]
+			if i != 0:
+				current_option = "Load: " + current_option
+
+			if i == selected:
+				stdscr.addstr(15 + i, 50, current_option, curses.color_pair(1))
+			else:
+				stdscr.addstr(15 + i, 50, current_option)
+
+
+		k = stdscr.getch()
+		if k == ord("q"):
+			crash = True
+		elif k == curses.KEY_UP:
+			selected = selected - 1
+			print(game_started)
+			if selected < 0:
+				selected = len(menu_options) - 1
+		elif k == curses.KEY_DOWN:
+			selected = selected + 1
+			if selected > len(menu_options) - 1:
+				selected = 0
+		# Select option
+		elif k == ord("g"):
+			if selected != 0:
+				global slraw
+				global slhm
+				global slobj
+
+				slraw, slhm, slobj = fs.loadFromFile(menu_options[selected])
+				player.current_save = menu_options[selected]
+			else:
+				player.current_save = "save_" + str(len(os.listdir("Saves/")) + 1)
+			game_started = True
+			start_game(stdscr)
+
+
+
+
 
 	# Update
-	while not crash:
+	while not crash and game_started:
 		k = stdscr.getch()
 
 		player.draw(stdscr)
@@ -312,9 +347,10 @@ def main(stdscr):
 		elif k == ord("2"):
 			player.change_mode(stdscr, 1)
 		elif k == ord("S"):
-			saveToFile(stdscr, "save_1")
+			fs.saveToFile(stdscr, player.current_save, slraw, slhm, slobj)
 
 		if player.can_fall:
 			player.fall_check(stdscr)
+
 
 curses.wrapper(main)
