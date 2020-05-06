@@ -1,0 +1,17 @@
+0.1
+First build
+
+0.2
+Bugfixes
+Added diagonal controls
+Added new control system using tuples
+
+0.3
+Bugfixes
+Revamped terrain gen and mapping
+Builds are now stored in memory
+
+
+0.31
+Save to file
+Load from file
