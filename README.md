@@ -1,10 +1,17 @@
-Name: 
-terrain_current
+<h1>Curses-Sandbox</h1>
 
-Description: 
-The current terrain gen project.
-
-Controls:
-WASD - walk
-Numpad (num lock off) - actions
-Numbers (1-9) - change mode
+<p>Curses-sandbox is a program that mainly uses a Python curses library for a GUI.</p>
+<h2>Features include:</h2>
+<ul>
+    <li>Randomized terrain generation</li>
+    <li>Character control</li>
+    <li>Building and destroying terrain</li>
+    <li>Anything you do stays</li>
+</ul>
+<h2>Upcoming features:</h2>
+<ul>
+    <li>Panels for various menus</li>
+    <li>Saving of world</li>
+    <li>Items and inventory</li>
+    <li>Much more...</li>
+</ul>
