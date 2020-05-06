@@ -6,12 +6,12 @@
     <li>Randomized terrain generation</li>
     <li>Character control</li>
     <li>Building and destroying terrain</li>
-    <li>Anything you do stays</li>
+    <li>World permanence</li>
+    <li>Basic manual save/load functions</li>
 </ul>
 <h2>Upcoming features:</h2>
 <ul>
     <li>Panels for various menus</li>
-    <li>Saving of world</li>
     <li>Items and inventory</li>
     <li>Much more...</li>
 </ul>
