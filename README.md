@@ -19,8 +19,9 @@
 <h2>How to play</h2>
 <p>Click run.bat to run the game</p>
 <p>Select option: Enter</p>
+<p>Quit game: q</p>
 <p>Save: ^S</p>
-<p>Movement: W/A/S/D</p>
+<p>Movement: w/a/s/d</p>
 <p>Tool usage: numpad-keys (numlock off)</p>
 <p>Change tool (mine/build): number-keys</p>
 

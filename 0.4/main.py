@@ -2,6 +2,7 @@ import curses
 import random as _r
 import saveload as sl
 import os
+import math
 
 h = 30
 w = 119
@@ -9,6 +10,9 @@ w = 119
 slraw = []
 slhm = []
 slobj = []
+
+game_title = "Welcome to curses-sandbox!"
+author = "Samuel Anderson"
 
 # slraw = screen list raw - has all raw data of terrain textures/characters
 # slhm = screen list height map- has only heights as list
@@ -246,6 +250,8 @@ def main(stdscr):
 	initialize_menu()
 	while not crash and not game_started:
 
+		stdscr.addstr(1, math.floor(w / 2) - math.floor(len(game_title) / 2), game_title)
+		stdscr.addstr(h - 2, math.floor(w / 2) - math.floor(len("By " + author) / 2), "By " + author)
 
 		for i in range(len(menu_options)):
 			current_option = menu_options[i]
@@ -253,9 +259,9 @@ def main(stdscr):
 				current_option = "Load: " + current_option
 
 			if i == selected:
-				stdscr.addstr(15 + i, 50, current_option, curses.color_pair(1))
+				stdscr.addstr(15 + i, math.floor(w / 2) - math.floor(len(current_option) / 2), current_option, curses.color_pair(1))
 			else:
-				stdscr.addstr(15 + i, 50, current_option)
+				stdscr.addstr(15 + i, math.floor(w / 2) - math.floor(len(current_option) / 2), current_option)
 
 
 		k = stdscr.getch()
